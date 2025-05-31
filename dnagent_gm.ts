@@ -76,7 +76,7 @@ async function main() {
   );
 
   const llm = new ChatOllama({
-    baseUrl: "http://localhost:11434",
+    baseUrl: "http://172.28.9.201:11434",
     model: "qwen3:0.6b",
     verbose: false,
     temperature: 0.5,
