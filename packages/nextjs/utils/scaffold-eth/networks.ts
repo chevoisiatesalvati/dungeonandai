@@ -1,6 +1,9 @@
 import * as chains from "viem/chains";
 import scaffoldConfig from "~~/scaffold.config";
 
+const { targetNetworks } = scaffoldConfig;
+const [hederaTestnet, hederaMainnet] = targetNetworks;
+
 type ChainAttributes = {
   // color | [lightThemeColor, darkThemeColor]
   color: string | [string, string];
@@ -89,6 +92,12 @@ export const NETWORKS_EXTRA_DATA: Record<string, ChainAttributes> = {
   },
   [chains.celoAlfajores.id]: {
     color: "#476520",
+  },
+  [hederaTestnet.id]: {
+    color: "#00a3e0",
+  },
+  [hederaMainnet.id]: {
+    color: "#00a3e0",
   },
 };
 

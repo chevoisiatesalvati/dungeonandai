@@ -1,5 +1,42 @@
 import * as chains from "viem/chains";
 
+// Custom Hedera chains
+const hederaTestnet = {
+  id: 296,
+  name: "Hedera Testnet",
+  network: "hedera-testnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "HBAR",
+    symbol: "HBAR",
+  },
+  rpcUrls: {
+    default: { http: ["https://testnet.hashio.io/api"] },
+    public: { http: ["https://testnet.hashio.io/api"] },
+  },
+  blockExplorers: {
+    default: { name: "HashScan", url: "https://hashscan.io/testnet" },
+  },
+} as const;
+
+const hederaMainnet = {
+  id: 295,
+  name: "Hedera Mainnet",
+  network: "hedera-mainnet",
+  nativeCurrency: {
+    decimals: 18,
+    name: "HBAR",
+    symbol: "HBAR",
+  },
+  rpcUrls: {
+    default: { http: ["https://mainnet.hashio.io/api"] },
+    public: { http: ["https://mainnet.hashio.io/api"] },
+  },
+  blockExplorers: {
+    default: { name: "HashScan", url: "https://hashscan.io/mainnet" },
+  },
+} as const;
+
 export type ScaffoldConfig = {
   targetNetworks: readonly chains.Chain[];
   pollingInterval: number;
@@ -13,7 +50,7 @@ export const DEFAULT_ALCHEMY_API_KEY = "oKxs-03sij-U_N0iOlrSsZFr29-IqbuF";
 
 const scaffoldConfig = {
   // The networks on which your DApp is live
-  targetNetworks: [chains.hardhat],
+  targetNetworks: [hederaTestnet, hederaMainnet],
 
   // The interval at which your front-end polls the RPC servers for new data
   // it has no effect if you only target the local network (default is 4000)
@@ -28,8 +65,8 @@ const scaffoldConfig = {
   // If you want to use a different RPC for a specific network, you can add it here.
   // The key is the chain ID, and the value is the HTTP RPC URL
   rpcOverrides: {
-    // Example:
-    // [chains.mainnet.id]: "https://mainnet.buidlguidl.com",
+    [hederaTestnet.id]: process.env.NEXT_PUBLIC_HEDERA_TESTNET_RPC || "https://testnet.hashio.io/api",
+    [hederaMainnet.id]: process.env.NEXT_PUBLIC_HEDERA_MAINNET_RPC || "https://mainnet.hashio.io/api",
   },
 
   // This is ours WalletConnect's default project ID.
