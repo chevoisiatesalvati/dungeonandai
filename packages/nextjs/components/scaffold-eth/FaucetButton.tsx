@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createWalletClient, http, parseEther } from "viem";
 import { hardhat } from "viem/chains";
 import { useAccount } from "wagmi";
@@ -26,6 +26,15 @@ export const FaucetButton = () => {
   const { data: balance } = useWatchBalance({ address });
 
   const [loading, setLoading] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    if (balance) {
+      setShowTooltip(balance.value === 0n);
+    }
+  }, [balance]);
 
   const faucetTxn = useTransactor(localWalletClient);
 
@@ -50,16 +59,16 @@ export const FaucetButton = () => {
     return null;
   }
 
-  const isBalanceZero = balance && balance.value === 0n;
-
   return (
     <div
       className={
-        !isBalanceZero
+        !isMounted
           ? "ml-1"
-          : "ml-1 tooltip tooltip-bottom tooltip-primary tooltip-open font-bold before:left-auto before:transform-none before:content-[attr(data-tip)] before:-translate-x-2/5"
+          : !showTooltip
+            ? "ml-1"
+            : "ml-1 tooltip tooltip-bottom tooltip-primary tooltip-open font-bold before:left-auto before:transform-none before:content-[attr(data-tip)] before:-translate-x-2/5"
       }
-      data-tip="Grab funds from faucet"
+      data-tip={isMounted ? "Grab funds from faucet" : undefined}
     >
       <button className="btn btn-secondary btn-sm px-2 rounded-full" onClick={sendETH} disabled={loading}>
         {!loading ? (
