@@ -31,7 +31,6 @@
     "hardhat:hardhat-verify": "yarn workspace @se-2/hardhat hardhat-verify",
     "hardhat:test": "yarn workspace @se-2/hardhat test",
     "hardhat:verify": "yarn workspace @se-2/hardhat verify",
-    "postinstall": "husky install",
     "ipfs": "yarn workspace @se-2/nextjs ipfs",
     "next:build": "yarn workspace @se-2/nextjs build",
     "next:check-types": "yarn workspace @se-2/nextjs check-types",
@@ -43,9 +42,6 @@
     "vercel:login": "yarn workspace @se-2/nextjs vercel:login",
     "vercel:yolo": "yarn workspace @se-2/nextjs vercel:yolo",
     "verify": "yarn hardhat:verify"
-  },
-  "devDependencies": {
-    "husky": "~9.1.6"
   },
   "packageManager": "yarn@3.2.3",
   "engines": {
