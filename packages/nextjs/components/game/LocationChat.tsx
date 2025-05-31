@@ -105,6 +105,81 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
     }
   };
 
+  const formatMessage = (content: string) => {
+    // Split into lines and process them
+    const lines = content.split("\n");
+    const processedLines: string[] = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+
+      // Skip lines that don't contain any letters or are just dashes
+      if (!/[a-zA-Z]/.test(line) || /^[\s-]+$/.test(line)) {
+        continue;
+      }
+
+      // Check if current line is an enumeration (e.g., "1.", "2.", etc.) or starts with "-"
+      if (/^\d+\./.test(line) || /^-/.test(line)) {
+        // If there's a next line, join it with current line
+        if (i + 1 < lines.length) {
+          const nextLine = lines[i + 1].trim();
+          // Only join if next line has letters and isn't another enumeration or dash line
+          if (
+            nextLine &&
+            /[a-zA-Z]/.test(nextLine) &&
+            !/^\d+\./.test(nextLine) &&
+            !/^-/.test(nextLine) &&
+            !/^[\s-]+$/.test(nextLine)
+          ) {
+            processedLines.push(`${line} ${nextLine}`);
+            i++; // Skip the next line since we've joined it
+            continue;
+          }
+        }
+      }
+
+      processedLines.push(line);
+    }
+
+    // Join lines back together
+    const cleanedContent = processedLines.join("\n");
+
+    // Split content into paragraphs and format them
+    return cleanedContent.split("\n\n").map((paragraph, index) => {
+      // Add newline before bold text if it's not at the start of paragraph
+      const withNewlinesBeforeBold = paragraph.replace(/([^\n])\*\*(.*?)\*\*/g, "$1\n**$2**");
+      // Format bold text
+      const formattedParagraph = withNewlinesBeforeBold.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+      // Format italic text
+      const formattedWithItalic = formattedParagraph.replace(/\*(.*?)\*/g, "<em>$1</em>");
+
+      // Process the formatted text to handle "-" before bold words
+      const finalText = formattedWithItalic
+        .split("\n")
+        .map(line => {
+          // Skip lines that are just dashes
+          if (/^[\s-]+$/.test(line.trim())) {
+            return "";
+          }
+          // If line starts with "-" and contains bold text, keep it as is
+          if (line.trim().startsWith("-") && line.includes("<strong>")) {
+            return line;
+          }
+          // If line contains bold text but doesn't start with "-", add "-" at the start
+          if (line.includes("<strong>") && !line.trim().startsWith("-")) {
+            return `- ${line}`;
+          }
+          return line;
+        })
+        .filter(line => line !== "") // Remove empty lines
+        .join("\n");
+
+      return (
+        <p key={index} className="mb-2 last:mb-0 whitespace-pre-line" dangerouslySetInnerHTML={{ __html: finalText }} />
+      );
+    });
+  };
+
   return (
     <Card className="w-full h-full bg-[#2c1810] border-[#d4af37] flex flex-col">
       {/* Chat Header */}
@@ -118,14 +193,20 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
           {messages.map(message => (
             <div key={message.id} className={`flex ${message.sender === "player" ? "justify-end" : "justify-start"}`}>
               <div
-                className={`max-w-[80%] rounded-lg p-3 ${
+                className={`max-w-[80%] rounded-lg p-4 ${
                   message.sender === "player"
                     ? "bg-[#d4af37] text-[#2c1810]"
                     : "bg-[#1a0f0a] text-[#d4af37] border border-[#d4af37]/30"
                 }`}
               >
-                <p className="text-sm">{message.content}</p>
-                <span className="text-xs opacity-50 mt-1 block">{message.timestamp.toLocaleTimeString()}</span>
+                <div className="prose prose-invert max-w-none">
+                  {message.sender === "npc" ? (
+                    <div className="space-y-2">{formatMessage(message.content)}</div>
+                  ) : (
+                    <p className="text-sm">{message.content}</p>
+                  )}
+                </div>
+                <span className="text-xs opacity-50 mt-2 block">{message.timestamp.toLocaleTimeString()}</span>
               </div>
             </div>
           ))}

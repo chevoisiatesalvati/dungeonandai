@@ -25,14 +25,21 @@ export async function GM_Response(input: string): Promise<string> {
     const response = await llm.invoke([
       {
         role: "system",
-        content: "Act as this character: Allow me to tell the tale in a wondrous manner, as a bard from the Eastern Lands of Middle-earth, amidst dragons, knights, and great battles."
+        content: `You're the experienced DnD game master.
+                  Briefly describe the world around. Provide players their roles, stats and abilities.
+                  Responce should be formatted in a most human readable way so it's easy to understand and consume`,
+
       },
       {
         role: "user",
         content: input
       }
     ]);
-    return typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
+    
+    let content = typeof response.content === 'string' ? response.content : JSON.stringify(response.content);
+    // Remove text within <think> blocks
+    content = content.replace(/<think>[\s\S]*?<\/think>/g, '');
+    return content;
   } catch (error) {
     console.error('Error in GM_Response:', error);
     return "I apologize, but I'm having trouble processing your request right now.";
