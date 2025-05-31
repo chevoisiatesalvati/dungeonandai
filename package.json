@@ -61,9 +61,13 @@
     "@hashgraph/sdk": "^2.65.1",
     "@hashgraphonline/hashinal-wc": "^1.0.96",
     "@hashgraphonline/hedera-agent-kit": "^0.0.23",
+    "@hashgraphonline/standards-sdk": "^0.0.114",
     "@langchain/core": "^0.3.57",
+    "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.5.11",
+    "dotenv": "^16.5.0",
     "react-icons": "^5.5.0",
+    "tsx": "^4.19.4",
     "zod": "^3.25.42"
   }
 }
