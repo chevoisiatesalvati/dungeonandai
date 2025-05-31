@@ -64,11 +64,14 @@ async function queryAccountBalance(accountId) {
 async function mintNFT(tokenId) {
   console.log("MintNFT--------------------------");
 
+  let metadata = ''
+  
+
   // Mint new NFT
   let mintTx = await new TokenMintTransaction()
     .setTokenId(tokenId)
     .setMetadata([
-      Buffer.from("ipfs://bafybeidzjfm2rdcpeygubqdg74rmsdlu2a6ocyplxks2mnkubhyxqggflq"),
+      Buffer.from("ipfs://bafkreibirmhogrkhblrmyefyxurmntgy4zzng2juxaffkjkxgtdddap52y"),
       Buffer.from("secondToken"),
     ])
     .execute(client);

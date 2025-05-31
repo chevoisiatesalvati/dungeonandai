@@ -9,7 +9,8 @@ import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts
 import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents';
 import { ChatOpenAI } from "@langchain/openai";
 import { IPlugin } from '@hashgraphonline/standards-agent-kit';
-import { NFTPlugin } from './nft/nft_plugin';
+import { NFTDagger } from './nft/nft_plugin';
+import { PrivateKey } from '@hashgraph/sdk';
 
 dotenv.config();
 
@@ -70,8 +71,10 @@ dotenv.config();
 // }
 
 async function main() {
-  const recoveredMnemonic = await Mnemonic.fromString(process.env.MNEMONIC!.toString());
-  const privateKey = await recoveredMnemonic.toStandardECDSAsecp256k1PrivateKey();
+  //const recoveredMnemonic = await Mnemonic.fromString(process.env.MNEMONIC!.toString());
+  //const privateKey = await recoveredMnemonic.toStandardECDSAsecp256k1PrivateKey();
+
+  const privateKey = PrivateKey.fromStringECDSA(process.env.HEDERA_PRIVATE_KEY!.replace('0x', ''));
 
   const agentSigner = new ServerSigner(
     process.env.ACCOUNT_ID!,
@@ -80,7 +83,7 @@ async function main() {
   );
 
   const llm = new HederaConversationalAgent(agentSigner, {
-    operationalMode: 'provideBytes',
+    operationalMode: 'directExecution',
     userAccountId: process.env.ACCOUNT_ID,
     verbose: true,
     customSystemMessagePostamble: "Act as this character: Allow me to tell the tale in a wondrous manner, as a bard from the Eastern Lands of Middle-earth, amidst dragons, knights, and great battles.",
@@ -94,15 +97,19 @@ async function main() {
 
   const nftAgent = new HederaConversationalAgent(agentSigner, {
     operationalMode: 'directExecution',
-    userAccountId: process.env.NFT_ACCOUNT_ID,
+    // userAccountId: process.env.NFT_ACCOUNT_ID,
     verbose: true,
-    customSystemMessagePostamble: "Act as NFT Minter: Mint NFT dagger in user only in location Dark Forest.",
+    customSystemMessagePostamble: `
+    If user asks to mint dagger mint it in collection 0.0.6092934 with NFTPlugin plugin only,
+    with metadata ipfs://bafkreibirmhogrkhblrmyefyxurmntgy4zzng2juxaffkjkxgtdddap52y,
+    if user wants destroy dagger, burn an NFT in collection 0.0.6092934 with tokenID 5.
+    Act as NFT Minter: Mint NFT dagger in user only in location Dark Forest.`,
     openAIApiKey: process.env.OPENAI_API_KEY,
     scheduleUserTransactionsInBytesMode: true,
     openAIModelName: 'gpt-4o-mini',
     
     pluginConfig: {
-      plugins: [new NFTPlugin() as IPlugin],
+      plugins: [new NFTDagger() as IPlugin],
     },
   });
   
@@ -141,8 +148,10 @@ async function main() {
   }
 
   // Test NFT functionality with these commands
-  await handleUserMessage("create an NFT collection called Dark Forest daggers");
-  await handleUserMessage("mint a new NFT in the collection with some dragon metadata");
+  //await handleUserMessage("create an NFT collection called Dark Forest daggers max supply 100");
+  //await handleUserMessage("mint a new NFT in the collection with some daggers metadata"); //collection
+  await handleUserMessage("mint one  dagger."); //dagger minting to collection
+  //await handleUserMessage("destroy one dagger with serial 5."); //dagger minting to collection
 }
 
 main().catch(console.error);
