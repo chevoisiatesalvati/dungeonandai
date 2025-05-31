@@ -23,9 +23,20 @@ interface LocationChatProps {
   npcName: string;
   playerName?: string;
   playerId?: string;
+  activities: {
+    name: string;
+    description: string;
+    action: string;
+  }[];
 }
 
-export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName, playerName = "You", playerId }) => {
+export const LocationChat: React.FC<LocationChatProps> = ({
+  locationId,
+  npcName,
+  playerName = "You",
+  playerId,
+  activities,
+}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -241,8 +252,29 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName,
         </ScrollArea>
       </div>
 
-      {/* Input Area */}
+      {/* Actions Bar */}
       <div className="p-4 border-t border-[#d4af37]/30 flex-shrink-0">
+        <div className="flex flex-wrap gap-2 mb-4">
+          {activities.map((activity, index) => (
+            <Button
+              key={index}
+              className="bg-[#1a0f0a] text-[#d4af37] border border-[#d4af37]/30 hover:bg-[#d4af37] hover:text-[#2c1810] transition-colors relative group"
+              onClick={() => {
+                const event = new CustomEvent("location-action", {
+                  detail: { action: activity.action },
+                });
+                window.dispatchEvent(event);
+              }}
+            >
+              {activity.name}
+              <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-[#2c1810] text-[#d4af37] text-sm rounded-lg border border-[#d4af37]/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none max-w-[200px] break-words">
+                <p className="whitespace-normal">{activity.description}</p>
+              </div>
+            </Button>
+          ))}
+        </div>
+
+        {/* Input Area */}
         <div className="flex gap-2">
           <Input
             value={inputMessage}
