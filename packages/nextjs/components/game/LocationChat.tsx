@@ -23,6 +23,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+
   const formattedLocationName = locationId
     .split("-")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
