@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { Card } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Backpack, BookOpen, Brain, Footprints, Heart, Shield, Sword, User, Zap } from "lucide-react";
@@ -31,7 +32,7 @@ interface PlayerAsset {
   tokenId?: string; // Hedera token ID
 }
 
-interface PlayerProfileProps {
+export interface PlayerProfileProps {
   name: string;
   race: string;
   gender: string;
@@ -43,6 +44,8 @@ interface PlayerProfileProps {
   assets: PlayerAsset[];
   level: number;
   experience: number;
+  assetError?: string | null;
+  isLoadingAssets?: boolean;
 }
 
 export const PlayerProfile: React.FC<PlayerProfileProps> = ({
@@ -57,6 +60,8 @@ export const PlayerProfile: React.FC<PlayerProfileProps> = ({
   assets,
   level,
   experience,
+  assetError,
+  isLoadingAssets,
 }) => {
   const getRarityColor = (rarity: PlayerAsset["rarity"]) => {
     switch (rarity) {
@@ -80,9 +85,11 @@ export const PlayerProfile: React.FC<PlayerProfileProps> = ({
           {/* Left Column - Avatar and Basic Info */}
           <div className="w-full md:w-1/3">
             <div className="relative">
-              <img
+              <Image
                 src={avatar}
                 alt={`${name}'s avatar`}
+                width={400}
+                height={400}
                 className="w-full aspect-square rounded-lg object-cover border-2 border-[#d4af37]/20"
               />
               <div className="absolute bottom-0 left-0 right-0 bg-black/80 p-2 rounded-b-lg">
@@ -202,22 +209,39 @@ export const PlayerProfile: React.FC<PlayerProfileProps> = ({
 
               {/* Inventory Tab */}
               <TabsContent value="inventory" className="mt-4">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                  {assets.map(asset => (
-                    <div
-                      key={asset.id}
-                      className="bg-black/20 p-3 rounded-lg border border-[#d4af37]/20 hover:border-[#d4af37]/40 transition-colors"
-                    >
-                      <img
-                        src={asset.image}
-                        alt={asset.name}
-                        className="w-full aspect-square object-cover rounded-lg mb-2"
-                      />
-                      <h3 className={`font-semibold ${getRarityColor(asset.rarity)}`}>{asset.name}</h3>
-                      <p className="text-[#d4af37]/80 text-sm mt-1">{asset.description}</p>
-                      {asset.tokenId && <p className="text-[#d4af37]/60 text-xs mt-2">Token ID: {asset.tokenId}</p>}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {isLoadingAssets ? (
+                    <div className="col-span-full text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#d4af37] mx-auto"></div>
+                      <p className="mt-2 text-gray-400">Loading assets...</p>
                     </div>
-                  ))}
+                  ) : assetError ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-red-500">{assetError}</p>
+                    </div>
+                  ) : assets.length === 0 ? (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-gray-400">No assets found</p>
+                    </div>
+                  ) : (
+                    assets.map(asset => (
+                      <div
+                        key={asset.id}
+                        className="bg-black/20 p-3 rounded-lg border border-[#d4af37]/20 hover:border-[#d4af37]/40 transition-colors"
+                      >
+                        <Image
+                          src={asset.image}
+                          alt={asset.name}
+                          width={300}
+                          height={300}
+                          className="w-full aspect-square object-cover rounded-lg mb-2"
+                        />
+                        <h3 className={`font-semibold ${getRarityColor(asset.rarity)}`}>{asset.name}</h3>
+                        <p className="text-[#d4af37]/80 text-sm mt-1">{asset.description}</p>
+                        {asset.tokenId && <p className="text-[#d4af37]/60 text-xs mt-2">Token ID: {asset.tokenId}</p>}
+                      </div>
+                    ))
+                  )}
                 </div>
               </TabsContent>
             </Tabs>

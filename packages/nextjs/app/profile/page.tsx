@@ -1,15 +1,16 @@
 "use client";
 
 import { PlayerProfile } from "~~/components/game/PlayerProfile";
+import { usePlayerAssets } from "~~/hooks/usePlayerAssets";
 
-// Temporary mock data - replace with real data from your backend/blockchain
+// Temporary mock data for non-NFT data - replace with real data from your backend
 const mockPlayerData = {
   name: "Adventurer",
   race: "Human",
   gender: "Male",
   age: 25,
   height: "6'0\"",
-  avatar: "https://placehold.co/400x400/2c1810/d4af37?text=Avatar",
+  avatar: "https://m.media-amazon.com/images/I/61K9FB-yFxL._AC_SL1002_.jpg",
   stats: {
     strength: 10,
     intelligence: 8,
@@ -23,44 +24,17 @@ const mockPlayerData = {
     { name: "Archery", level: 2, experience: 200, category: "combat" as const },
     { name: "Alchemy", level: 1, experience: 50, category: "crafting" as const },
   ],
-  assets: [
-    {
-      id: "1",
-      name: "Steel Sword",
-      type: "weapon" as const,
-      rarity: "uncommon" as const,
-      image: "https://placehold.co/200x200/2c1810/d4af37?text=Sword",
-      description: "A well-crafted steel sword",
-      tokenId: "0.0.123456",
-    },
-    {
-      id: "2",
-      name: "Leather Armor",
-      type: "armor" as const,
-      rarity: "common" as const,
-      image: "https://placehold.co/200x200/2c1810/d4af37?text=Armor",
-      description: "Basic leather protection",
-      tokenId: "0.0.123457",
-    },
-    {
-      id: "3",
-      name: "Health Potion",
-      type: "consumable" as const,
-      rarity: "common" as const,
-      image: "https://placehold.co/200x200/2c1810/d4af37?text=Potion",
-      description: "Restores 50 health points",
-      tokenId: "0.0.123458",
-    },
-  ],
   level: 5,
   experience: 750,
 };
 
 export default function ProfilePage() {
+  const { assets, isLoading, error } = usePlayerAssets();
+
   return (
     <main className="flex flex-col flex-1 p-4 md:p-8">
       <div className="flex flex-col flex-1 w-full max-w-7xl mx-auto">
-        <PlayerProfile {...mockPlayerData} />
+        <PlayerProfile {...mockPlayerData} assets={assets} assetError={error} isLoadingAssets={isLoading} />
       </div>
     </main>
   );
