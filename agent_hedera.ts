@@ -102,8 +102,7 @@ async function main() {
     customSystemMessagePostamble: `
     If user asks to mint dagger mint it in collection 0.0.6092934 with NFTPlugin plugin only,
     with metadata ipfs://bafkreibirmhogrkhblrmyefyxurmntgy4zzng2juxaffkjkxgtdddap52y,
-    if user wants destroy dagger, burn an NFT in collection 0.0.6092934 with tokenID 5.
-    Act as NFT Minter: Mint NFT dagger in user only in location Dark Forest.`,
+    if user wants destroy dagger, burn NFT in collection ID 0.0.6092934.`,
     openAIApiKey: process.env.OPENAI_API_KEY,
     scheduleUserTransactionsInBytesMode: true,
     openAIModelName: 'gpt-4o-mini',
@@ -148,10 +147,9 @@ async function main() {
   }
 
   // Test NFT functionality with these commands
-  //await handleUserMessage("create an NFT collection called Dark Forest daggers max supply 100");
-  //await handleUserMessage("mint a new NFT in the collection with some daggers metadata"); //collection
-  await handleUserMessage("mint one  dagger."); //dagger minting to collection
-  //await handleUserMessage("destroy one dagger with serial 5."); //dagger minting to collection
+  //await handleUserMessage("create an NFT collection called Dark Forest daggers max supply 100"); //create collection
+  //await handleUserMessage("mint one dagger."); // minting item to collection
+  await handleUserMessage("destroy one dagger with tokenid 2."); //burn nft from collection
 }
 
 main().catch(console.error);
