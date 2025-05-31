@@ -29,19 +29,14 @@
     "hardhat:format": "yarn workspace @se-2/hardhat format",
     "hardhat:generate": "yarn workspace @se-2/hardhat generate",
     "hardhat:hardhat-verify": "yarn workspace @se-2/hardhat hardhat-verify",
-    "hardhat:lint": "yarn workspace @se-2/hardhat lint",
-    "hardhat:lint-staged": "yarn workspace @se-2/hardhat lint-staged",
     "hardhat:test": "yarn workspace @se-2/hardhat test",
     "hardhat:verify": "yarn workspace @se-2/hardhat verify",
     "postinstall": "husky install",
     "ipfs": "yarn workspace @se-2/nextjs ipfs",
-    "lint": "yarn next:lint && yarn hardhat:lint",
     "next:build": "yarn workspace @se-2/nextjs build",
     "next:check-types": "yarn workspace @se-2/nextjs check-types",
     "next:format": "yarn workspace @se-2/nextjs format",
-    "next:lint": "yarn workspace @se-2/nextjs lint",
     "next:serve": "yarn workspace @se-2/nextjs serve",
-    "precommit": "lint-staged",
     "start": "yarn workspace @se-2/nextjs dev",
     "test": "yarn hardhat:test",
     "vercel": "yarn workspace @se-2/nextjs vercel",
@@ -50,8 +45,7 @@
     "verify": "yarn hardhat:verify"
   },
   "devDependencies": {
-    "husky": "~9.1.6",
-    "lint-staged": "~13.2.2"
+    "husky": "~9.1.6"
   },
   "packageManager": "yarn@3.2.3",
   "engines": {
