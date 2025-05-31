@@ -80,7 +80,8 @@ async function main() {
   const llm = new HederaConversationalAgent(agentSigner, {
     operationalMode: 'provideBytes',
     userAccountId: process.env.ACCOUNT_ID,
-    verbose: false,
+    verbose: true,
+    customSystemMessagePostamble: "Act as this character: Allow me to tell the tale in a wondrous manner, as a bard from the Eastern Lands of Middle-earth, amidst dragons, knights, and great battles.",
     openAIApiKey: process.env.OPENAI_API_KEY,
     scheduleUserTransactionsInBytesMode: true,
     openAIModelName: 'gpt-4o-mini',
@@ -119,7 +120,7 @@ async function main() {
   }
 
   // Call the function with "hello"
-  await handleUserMessage("hello");
+  await handleUserMessage("tells a story about a dragon");
 }
 
 main().catch(console.error);
