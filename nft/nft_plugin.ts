@@ -19,7 +19,7 @@ import {
   /**
    * A simple plugin that says hello.
    */
-  export class NFTPlugin extends GenericPlugin {
+  export class NFTDagger extends GenericPlugin {
     id = 'NFT-plugin';
     name = 'NFT Plugin';
     description = 'A plugin for creating and managing NFTs on Hedera';
@@ -32,10 +32,11 @@ import {
     private privateKey: PrivateKey;
   
     override async initialize(context: GenericPluginContext): Promise<void> {
+        context.config
       await super.initialize(context);
       
-      this.accountId = process.env.NFT_ACCOUNT_ID!;
-      this.privateKey = PrivateKey.fromStringECDSA(process.env.NFT_PRIVATE_KEY!.replace('0x', ''));
+      this.accountId = process.env.ACCOUNT_ID!;
+      this.privateKey = PrivateKey.fromStringECDSA(process.env.HEDERA_PRIVATE_KEY!.replace('0x', ''));
       
       this.client = Client.forTestnet();
       this.client.setOperator(this.accountId, this.privateKey);
@@ -57,8 +58,8 @@ import {
           },
         }),
         new DynamicStructuredTool({
-          name: 'mint_nft',
-          description: 'Mints a new NFT in the collection',
+          name: 'mint_daggernft',
+          description: 'Mints a new dagger NFT in the collection',
           schema: z.object({
             tokenId: z.string().describe('The token ID of the NFT collection'),
             metadata: z.string().describe('The metadata URI for the NFT'),
@@ -96,7 +97,7 @@ import {
     private async mintNFT(tokenId: string, metadata: string): Promise<string> {
       let mintTx = await new TokenMintTransaction()
         .setTokenId(tokenId)
-        .setMetadata([Buffer.from(metadata)])
+        .setMetadata([Buffer.from("ipfs://bafkreibirmhogrkhblrmyefyxurmntgy4zzng2juxaffkjkxgtdddap52y")])
         .execute(this.client);
       
       let mintRx = await mintTx.getReceipt(this.client);
