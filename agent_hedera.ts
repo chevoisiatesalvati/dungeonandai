@@ -96,7 +96,7 @@ async function main() {
     operationalMode: 'directExecution',
     userAccountId: process.env.NFT_ACCOUNT_ID,
     verbose: true,
-    customSystemMessagePostamble: "Act as this character: Allow me to tell the tale in a wondrous manner, as a bard from the Eastern Lands of Middle-earth, amidst dragons, knights, and great battles.",
+    customSystemMessagePostamble: "Act as NFT Minter: Mint NFT dagger in user only in location Dark Forest.",
     openAIApiKey: process.env.OPENAI_API_KEY,
     scheduleUserTransactionsInBytesMode: true,
     openAIModelName: 'gpt-4o-mini',
@@ -141,7 +141,7 @@ async function main() {
   }
 
   // Test NFT functionality with these commands
-  await handleUserMessage("create an NFT collection called DragonNFT with symbol DNFT");
+  await handleUserMessage("create an NFT collection called Dark Forest daggers");
   await handleUserMessage("mint a new NFT in the collection with some dragon metadata");
 }
 

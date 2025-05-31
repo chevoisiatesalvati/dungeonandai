@@ -50,7 +50,7 @@ import {
           description: 'Creates a new NFT collection',
           schema: z.object({
             tokenName: z.string().describe('The name of the NFT collection'),
-            tokenSymbol: z.string().describe('The symbol for the NFT collection'),
+            tokenSymbol: z.string().describe('The symbol for the NFT collection')
           }),
           func: async ({ tokenName, tokenSymbol }) => {
             return await this.createNFT(tokenName, tokenSymbol);

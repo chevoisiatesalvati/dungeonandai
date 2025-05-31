@@ -68,7 +68,7 @@ async function mintNFT(tokenId) {
   let mintTx = await new TokenMintTransaction()
     .setTokenId(tokenId)
     .setMetadata([
-      Buffer.from("ipfs://QmTzWcVfk88JRqjTpVwHzBeULRTNzHY7mnBSG42CpwHmPa"),
+      Buffer.from("ipfs://bafybeidzjfm2rdcpeygubqdg74rmsdlu2a6ocyplxks2mnkubhyxqggflq"),
       Buffer.from("secondToken"),
     ])
     .execute(client);
