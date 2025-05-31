@@ -60,8 +60,8 @@
   "dependencies": {
     "@hashgraph/sdk": "^2.65.1",
     "@hashgraphonline/hashinal-wc": "^1.0.96",
-    "@hashgraphonline/hedera-agent-kit": "^0.0.23",
-    "@hashgraphonline/standards-sdk": "^0.0.114",
+    "@hashgraphonline/hedera-agent-kit": "0.0.23",
+    "@hashgraphonline/standards-sdk": "0.0.114",
     "@langchain/core": "^0.3.57",
     "@langchain/ollama": "^0.2.0",
     "@langchain/openai": "^0.5.11",

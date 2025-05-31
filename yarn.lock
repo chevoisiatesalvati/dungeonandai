@@ -2305,7 +2305,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@hashgraphonline/hedera-agent-kit@npm:^0.0.23":
+"@hashgraphonline/hedera-agent-kit@npm:0.0.23":
   version: 0.0.23
   resolution: "@hashgraphonline/hedera-agent-kit@npm:0.0.23"
   dependencies:
@@ -2374,6 +2374,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hashgraphonline/standards-sdk@npm:0.0.114, @hashgraphonline/standards-sdk@npm:^0.0.114":
+  version: 0.0.114
+  resolution: "@hashgraphonline/standards-sdk@npm:0.0.114"
+  dependencies:
+    "@hashgraph/hedera-wallet-connect": ^1.5.1-0
+    "@hashgraph/proto": ^2.18.5
+    "@hashgraph/sdk": 2.64.5
+    "@hashgraphonline/hashinal-wc": ^1.0.96
+    "@hashgraphonline/hedera-agent-kit": 0.0.18
+    "@kiloscribe/inscription-sdk": ^1.0.31
+    dotenv: ^16.4.7
+    ethers: ^6.13.5
+    file-type: ^20.4.1
+    ioredis: ^5.6.0
+    mime-types: ^2.1.35
+    pino: ^9.6.0
+    pino-pretty: ^13.0.0
+    zod: ^3.24.2
+  checksum: 796478ccfb7d90e7894deef3c272200fdac1639d9bfaec1f5fb907c755f159b4ab7be0e1b5838bf36477d8d8cafd585f8a992bb27639e15c7a4f920e012303d9
+  languageName: node
+  linkType: hard
+
 "@hashgraphonline/standards-sdk@npm:^0.0.112-canary.3, @hashgraphonline/standards-sdk@npm:^0.0.112-canary.4":
   version: 0.0.112
   resolution: "@hashgraphonline/standards-sdk@npm:0.0.112"
@@ -2393,28 +2415,6 @@ __metadata:
     pino-pretty: ^13.0.0
     zod: ^3.24.2
   checksum: b4037f85df32d2c0143897e333c67bd8ad509cf7c6e5dae8faea3624e5142a0b4da95be6c7339a21b8f1328441001288b0e4aa9491bb0d7e84affbe76f5c120c
-  languageName: node
-  linkType: hard
-
-"@hashgraphonline/standards-sdk@npm:^0.0.114":
-  version: 0.0.114
-  resolution: "@hashgraphonline/standards-sdk@npm:0.0.114"
-  dependencies:
-    "@hashgraph/hedera-wallet-connect": ^1.5.1-0
-    "@hashgraph/proto": ^2.18.5
-    "@hashgraph/sdk": 2.64.5
-    "@hashgraphonline/hashinal-wc": ^1.0.96
-    "@hashgraphonline/hedera-agent-kit": 0.0.18
-    "@kiloscribe/inscription-sdk": ^1.0.31
-    dotenv: ^16.4.7
-    ethers: ^6.13.5
-    file-type: ^20.4.1
-    ioredis: ^5.6.0
-    mime-types: ^2.1.35
-    pino: ^9.6.0
-    pino-pretty: ^13.0.0
-    zod: ^3.24.2
-  checksum: 796478ccfb7d90e7894deef3c272200fdac1639d9bfaec1f5fb907c755f159b4ab7be0e1b5838bf36477d8d8cafd585f8a992bb27639e15c7a4f920e012303d9
   languageName: node
   linkType: hard
 
@@ -19550,8 +19550,8 @@ __metadata:
   dependencies:
     "@hashgraph/sdk": ^2.65.1
     "@hashgraphonline/hashinal-wc": ^1.0.96
-    "@hashgraphonline/hedera-agent-kit": ^0.0.23
-    "@hashgraphonline/standards-sdk": ^0.0.114
+    "@hashgraphonline/hedera-agent-kit": 0.0.23
+    "@hashgraphonline/standards-sdk": 0.0.114
     "@langchain/core": ^0.3.57
     "@langchain/ollama": ^0.2.0
     "@langchain/openai": ^0.5.11

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { GM_Response } from "../../../../dnagent_gm";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
@@ -52,11 +53,10 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
       setMessages(prev => [...prev, playerMessage]);
 
       // TODO: Here we'll add the AI response logic based on the action
-      // For now, just add a placeholder response
-      setTimeout(() => {
+      setTimeout(async () => {
         const npcResponse: Message = {
           id: (Date.now() + 1).toString(),
-          content: "I'm still learning how to respond to that. Please try something else.",
+          content: await GM_Response(event.detail.action),
           sender: "npc",
           timestamp: new Date(),
         };
@@ -88,17 +88,14 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
     setMessages(prev => [...prev, playerMessage]);
     setInputMessage("");
 
-    // TODO: Here we'll add the AI response logic
-    // For now, just add a placeholder response
-    setTimeout(() => {
-      const npcResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "I'm still learning how to respond to that. Please try something else.",
-        sender: "npc",
-        timestamp: new Date(),
-      };
-      setMessages(prev => [...prev, npcResponse]);
-    }, 1000);
+    // Get AI response
+    const npcResponse: Message = {
+      id: (Date.now() + 1).toString(),
+      content: await GM_Response(inputMessage),
+      sender: "npc",
+      timestamp: new Date(),
+    };
+    setMessages(prev => [...prev, npcResponse]);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
