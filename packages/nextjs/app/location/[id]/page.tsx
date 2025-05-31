@@ -103,7 +103,7 @@ export default function LocationPage() {
     <main className="flex flex-col flex-1 p-4 md:p-8">
       <div className="flex flex-col flex-1 w-full max-w-7xl mx-auto">
         <Link href="/" className="inline-block mb-4">
-          <Button variant="outline">
+          <Button variant="outline" className="cursor-pointer">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Map
           </Button>

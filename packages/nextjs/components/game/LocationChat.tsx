@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { GM_Response } from "../../../../dnagent_gm";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
@@ -13,14 +14,18 @@ interface Message {
   content: string;
   sender: "player" | "npc";
   timestamp: Date;
+  senderName?: string;
+  senderId?: string;
 }
 
 interface LocationChatProps {
   locationId: string;
   npcName: string;
+  playerName?: string;
+  playerId?: string;
 }
 
-export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName }) => {
+export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName, playerName = "You", playerId }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -36,6 +41,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
       id: "1",
       content: `Welcome to the ${formattedLocationName}! How may I assist you today?`,
       sender: "npc" as const,
+      senderName: npcName,
       timestamp: new Date(),
     };
     setMessages([greeting]);
@@ -48,16 +54,18 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
         id: Date.now().toString(),
         content: event.detail.action,
         sender: "player",
+        senderName: playerName,
+        senderId: playerId,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, playerMessage]);
 
-      // TODO: Here we'll add the AI response logic based on the action
       setTimeout(async () => {
         const npcResponse: Message = {
           id: (Date.now() + 1).toString(),
           content: await GM_Response(event.detail.action),
           sender: "npc",
+          senderName: npcName,
           timestamp: new Date(),
         };
         setMessages(prev => [...prev, npcResponse]);
@@ -66,33 +74,37 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
 
     window.addEventListener("location-action", handleAction as EventListener);
     return () => window.removeEventListener("location-action", handleAction as EventListener);
-  }, []);
+  }, [npcName, playerName, playerId]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      const scrollContainer = scrollRef.current.querySelector("[data-radix-scroll-area-viewport]");
+      if (scrollContainer) {
+        scrollContainer.scrollTop = scrollContainer.scrollHeight;
+      }
     }
   }, [messages]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
 
-    // Add player message
     const playerMessage: Message = {
       id: Date.now().toString(),
       content: inputMessage,
       sender: "player",
+      senderName: playerName,
+      senderId: playerId,
       timestamp: new Date(),
     };
     setMessages(prev => [...prev, playerMessage]);
     setInputMessage("");
 
-    // Get AI response
     const npcResponse: Message = {
       id: (Date.now() + 1).toString(),
       content: await GM_Response(inputMessage),
       sender: "npc",
+      senderName: npcName,
       timestamp: new Date(),
     };
     setMessages(prev => [...prev, npcResponse]);
@@ -181,45 +193,61 @@ export const LocationChat: React.FC<LocationChatProps> = ({ locationId, npcName 
   };
 
   return (
-    <Card className="w-full h-full bg-[#2c1810] border-[#d4af37] flex flex-col">
+    <Card className="w-full h-[calc(100vh-2rem)] bg-[#2c1810] border-[#d4af37] flex flex-col overflow-hidden">
       {/* Chat Header */}
-      <div className="p-4 border-b border-[#d4af37]/30">
+      <div className="p-4 border-b border-[#d4af37]/30 flex-shrink-0">
         <h2 className="text-[#d4af37] font-bold text-lg">{formattedLocationName}</h2>
       </div>
 
       {/* Messages Area */}
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        <div className="space-y-4">
-          {messages.map(message => (
-            <div key={message.id} className={`flex ${message.sender === "player" ? "justify-end" : "justify-start"}`}>
-              <div
-                className={`max-w-[80%] rounded-lg p-4 ${
-                  message.sender === "player"
-                    ? "bg-[#d4af37] text-[#2c1810]"
-                    : "bg-[#1a0f0a] text-[#d4af37] border border-[#d4af37]/30"
-                }`}
-              >
-                <div className="prose prose-invert max-w-none">
-                  {message.sender === "npc" ? (
-                    <div className="space-y-2">{formatMessage(message.content)}</div>
-                  ) : (
-                    <p className="text-sm">{message.content}</p>
-                  )}
+      <div className="flex-1 overflow-hidden">
+        <ScrollArea className="h-full" ref={scrollRef}>
+          <div className="p-4">
+            <div className="space-y-4">
+              {messages.map(message => (
+                <div
+                  key={message.id}
+                  className={`flex ${message.sender === "player" ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[80%] rounded-lg p-4 ${
+                      message.sender === "player"
+                        ? "bg-[#d4af37] text-[#2c1810]"
+                        : "bg-[#1a0f0a] text-[#d4af37] border border-[#d4af37]/30"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      {message.sender === "player" && message.senderId ? (
+                        <Link href={`/profile/${message.senderId}`} className="text-sm font-semibold hover:underline">
+                          {message.senderName}
+                        </Link>
+                      ) : (
+                        <span className="text-sm font-semibold">{message.senderName}</span>
+                      )}
+                    </div>
+                    <div className="prose prose-invert max-w-none">
+                      {message.sender === "npc" ? (
+                        <div className="space-y-2">{formatMessage(message.content)}</div>
+                      ) : (
+                        <p className="text-sm">{message.content}</p>
+                      )}
+                    </div>
+                    <span className="text-xs opacity-50 mt-2 block">{message.timestamp.toLocaleTimeString()}</span>
+                  </div>
                 </div>
-                <span className="text-xs opacity-50 mt-2 block">{message.timestamp.toLocaleTimeString()}</span>
-              </div>
+              ))}
             </div>
-          ))}
-        </div>
-      </ScrollArea>
+          </div>
+        </ScrollArea>
+      </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-[#d4af37]/30">
+      <div className="p-4 border-t border-[#d4af37]/30 flex-shrink-0">
         <div className="flex gap-2">
           <Input
             value={inputMessage}
             onChange={e => setInputMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyPress}
             placeholder="Type your message..."
             className="bg-[#1a0f0a] border-[#d4af37]/30 text-[#d4af37] placeholder:text-[#d4af37]/50"
           />
