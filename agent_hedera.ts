@@ -149,7 +149,9 @@ async function main() {
   // Test NFT functionality with these commands
   //await handleUserMessage("create an NFT collection called Dark Forest daggers max supply 100"); //create collection
   //await handleUserMessage("mint one dagger."); // minting item to collection
-  await handleUserMessage("destroy one dagger with tokenid 2."); //burn nft from collection
+  //await handleUserMessage("destroy one dagger with tokenid 2.");
+  await handleUserMessage("transfer one dagger from 0.0.6052003 to 0.0.9224321 with nftId 0.0.6092934 with entityId 3");
+   //burn nft from collection
 }
 
 main().catch(console.error);
