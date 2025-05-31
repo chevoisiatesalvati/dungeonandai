@@ -1,1 +1,5 @@
-{ "name": "Scaffold-ETH 2 DApp", "description": "A DApp built with Scaffold-ETH", "iconPath": "logo.svg" }
+{
+  "name": "D&AI",
+  "description": "A game inspired by the classic Dungeons & Dragons and powered by AI and Blockchain",
+  "iconPath": "logo.png"
+}
