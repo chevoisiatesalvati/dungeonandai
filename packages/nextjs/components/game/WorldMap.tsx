@@ -118,7 +118,7 @@ export const WorldMap: React.FC = () => {
             <TooltipTrigger asChild>
               <Button
                 variant="outline"
-                className={`absolute transform -translate-x-1/2 -translate-y-1/2 p-3 transition-all duration-200 ${
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 p-3 transition-all duration-200 cursor-pointer ${
                   location.enabled
                     ? getDifficultyColor(location.difficulty)
                     : "text-gray-500 border-gray-500 cursor-not-allowed"

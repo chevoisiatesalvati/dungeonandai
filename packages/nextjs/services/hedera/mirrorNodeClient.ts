@@ -90,8 +90,6 @@ export class MirrorNodeClient {
       }),
     );
 
-    console.log("NFT infos with metadata:", nftInfosWithMetadata);
-
     return nftInfosWithMetadata;
   }
 

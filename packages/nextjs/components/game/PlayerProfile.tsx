@@ -131,15 +131,24 @@ export const PlayerProfile: React.FC<PlayerProfileProps> = ({
           <div className="w-full md:w-2/3">
             <Tabs defaultValue="character" className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-[#2c1810] border border-[#d4af37]/20">
-                <TabsTrigger value="character" className="text-[#d4af37] data-[state=active]:bg-[#d4af37]/20">
+                <TabsTrigger
+                  value="character"
+                  className="text-[#d4af37] data-[state=active]:bg-[#d4af37]/20 data-[state=active]:text-white hover:bg-[#d4af37]/10 transition-colors cursor-pointer"
+                >
                   <User className="w-4 h-4 mr-2" />
                   Character
                 </TabsTrigger>
-                <TabsTrigger value="skills" className="text-[#d4af37] data-[state=active]:bg-[#d4af37]/20">
+                <TabsTrigger
+                  value="skills"
+                  className="text-[#d4af37] data-[state=active]:bg-[#d4af37]/20 data-[state=active]:text-white hover:bg-[#d4af37]/10 transition-colors cursor-pointer"
+                >
                   <BookOpen className="w-4 h-4 mr-2" />
                   Skills
                 </TabsTrigger>
-                <TabsTrigger value="inventory" className="text-[#d4af37] data-[state=active]:bg-[#d4af37]/20">
+                <TabsTrigger
+                  value="inventory"
+                  className="text-[#d4af37] data-[state=active]:bg-[#d4af37]/20 data-[state=active]:text-white hover:bg-[#d4af37]/10 transition-colors cursor-pointer"
+                >
                   <Backpack className="w-4 h-4 mr-2" />
                   Inventory
                 </TabsTrigger>

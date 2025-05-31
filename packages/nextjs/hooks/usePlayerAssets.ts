@@ -41,25 +41,21 @@ export function usePlayerAssets() {
 
         // Convert Ethereum address to Hedera AccountId
         const accountId = AccountId.fromString(address);
-        console.log("Fetching NFTs for account:", accountId.toString());
 
         const mirrorNode = new MirrorNodeClient("testnet"); // or "mainnet" based on your network
 
         // Get NFT info with full metadata
         const nftInfos = await mirrorNode.getNftInfo(accountId);
-        console.log("Raw NFT infos:", nftInfos);
 
         // Transform NFT info to PlayerAsset format
         const nftAssets = await Promise.all(
           nftInfos.map(async nft => {
             try {
-              console.log("Processing NFT:", {
-                tokenId: nft.token_id,
-                serialNumber: nft.serial_number,
-                metadata: nft.metadata,
-                metadataType: typeof nft.metadata,
-                metadataLength: nft.metadata?.length,
-              });
+              // Validate NFT data structure
+              if (!nft.token_id || !nft.serial_number) {
+                console.warn("Invalid NFT data structure:", nft);
+                return null;
+              }
 
               if (!nft.metadata) {
                 console.warn("No metadata found for NFT:", nft.token_id, nft.serial_number);
@@ -67,24 +63,49 @@ export function usePlayerAssets() {
               }
 
               // Decode base64 metadata
-              const decodedMetadata = atob(nft.metadata);
-              console.log("Decoded metadata:", decodedMetadata);
+              let decodedMetadata;
+              try {
+                decodedMetadata = atob(nft.metadata);
+              } catch (err) {
+                console.warn("Failed to decode base64 metadata:", {
+                  tokenId: nft.token_id,
+                  serialNumber: nft.serial_number,
+                  error: err,
+                });
+                return null;
+              }
 
               let metadata;
-              if (decodedMetadata.startsWith("ipfs://")) {
-                // Convert IPFS URL to HTTP URL
-                const ipfsUrl = decodedMetadata.replace("ipfs://", "https://ipfs.io/ipfs/");
-                console.log("Fetching metadata from IPFS:", ipfsUrl);
+              try {
+                if (decodedMetadata.startsWith("ipfs://")) {
+                  // Convert IPFS URL to HTTP URL
+                  const ipfsUrl = decodedMetadata.replace("ipfs://", "https://ipfs.io/ipfs/");
 
-                const response = await fetch(ipfsUrl);
-                metadata = await response.json();
-                console.log("IPFS metadata:", metadata);
-              } else {
-                // Try to parse as JSON directly
-                metadata = JSON.parse(decodedMetadata);
+                  const response = await fetch(ipfsUrl);
+                  if (!response.ok) {
+                    throw new Error(`Failed to fetch IPFS metadata: ${response.statusText}`);
+                  }
+                  metadata = await response.json();
+                } else {
+                  // Try to parse as JSON directly
+                  metadata = JSON.parse(decodedMetadata);
+                }
+              } catch (err) {
+                console.warn("Failed to parse metadata:", {
+                  tokenId: nft.token_id,
+                  serialNumber: nft.serial_number,
+                  error: err,
+                  decodedMetadata,
+                });
+                return null;
               }
 
               // Validate required fields
+              if (!metadata || typeof metadata !== "object") {
+                console.warn("Invalid metadata format:", metadata);
+                return null;
+              }
+
               if (
                 !metadata.name ||
                 !metadata.attributes?.type ||
@@ -92,7 +113,33 @@ export function usePlayerAssets() {
                 !metadata.image ||
                 !metadata.description
               ) {
-                console.warn("Missing required metadata fields:", metadata);
+                console.warn("Missing required metadata fields:", {
+                  tokenId: nft.token_id,
+                  serialNumber: nft.serial_number,
+                  metadata,
+                });
+                return null;
+              }
+
+              // Validate type and rarity values
+              const validTypes = ["weapon", "armor", "consumable", "quest", "currency"];
+              const validRarities = ["common", "uncommon", "rare", "epic", "legendary"];
+
+              if (!validTypes.includes(metadata.attributes.type)) {
+                console.warn("Invalid type in metadata:", {
+                  tokenId: nft.token_id,
+                  serialNumber: nft.serial_number,
+                  type: metadata.attributes.type,
+                });
+                return null;
+              }
+
+              if (!validRarities.includes(metadata.attributes.rarity)) {
+                console.warn("Invalid rarity in metadata:", {
+                  tokenId: nft.token_id,
+                  serialNumber: nft.serial_number,
+                  rarity: metadata.attributes.rarity,
+                });
                 return null;
               }
 
@@ -109,7 +156,7 @@ export function usePlayerAssets() {
               console.error("Error processing NFT:", {
                 tokenId: nft.token_id,
                 serialNumber: nft.serial_number,
-                error: err,
+                error: err instanceof Error ? err.message : String(err),
                 metadata: nft.metadata,
               });
               return null;
@@ -118,7 +165,6 @@ export function usePlayerAssets() {
         );
 
         const validAssets = nftAssets.filter((asset): asset is PlayerAsset => asset !== null);
-        console.log("Processed assets:", validAssets);
         setAssets(validAssets);
       } catch (err) {
         console.error("Error fetching player assets:", err);
