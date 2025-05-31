@@ -56,5 +56,13 @@
   "packageManager": "yarn@3.2.3",
   "engines": {
     "node": ">=20.18.3"
+  },
+  "dependencies": {
+    "@hashgraph/sdk": "^2.65.1",
+    "@hashgraphonline/hashinal-wc": "^1.0.96",
+    "@hashgraphonline/hedera-agent-kit": "^0.0.23",
+    "@langchain/core": "^0.3.57",
+    "@langchain/openai": "^0.5.11",
+    "zod": "^3.25.42"
   }
 }
