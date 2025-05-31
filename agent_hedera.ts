@@ -1,13 +1,15 @@
 import * as dotenv from 'dotenv';
 import { ChatOllama } from "@langchain/ollama";
 import { ServerSigner } from '@hashgraphonline/hedera-agent-kit';
-import { HederaConversationalAgent } from '@hashgraphonline/hedera-agent-kit';
+import { HederaConversationalAgent, } from '@hashgraphonline/hedera-agent-kit';
 import { Mnemonic } from '@hashgraph/sdk';
 import { BaseChatModel } from '@langchain/core/language_models/chat_models';
 import { AIMessage, BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { ChatPromptTemplate, MessagesPlaceholder } from '@langchain/core/prompts';
 import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents';
 import { ChatOpenAI } from "@langchain/openai";
+import { IPlugin } from '@hashgraphonline/standards-agent-kit';
+import { NFTPlugin } from './nft/nft_plugin';
 
 dotenv.config();
 
@@ -90,8 +92,23 @@ async function main() {
     },
   });
 
-  await llm.initialize();
+  const nftAgent = new HederaConversationalAgent(agentSigner, {
+    operationalMode: 'directExecution',
+    userAccountId: process.env.NFT_ACCOUNT_ID,
+    verbose: true,
+    customSystemMessagePostamble: "Act as this character: Allow me to tell the tale in a wondrous manner, as a bard from the Eastern Lands of Middle-earth, amidst dragons, knights, and great battles.",
+    openAIApiKey: process.env.OPENAI_API_KEY,
+    scheduleUserTransactionsInBytesMode: true,
+    openAIModelName: 'gpt-4o-mini',
+    
+    pluginConfig: {
+      plugins: [new NFTPlugin() as IPlugin],
+    },
+  });
+  
 
+  await llm.initialize();
+  await nftAgent.initialize();
 
   //const dndAgent = new DnDAgent(llm);
   //await dndAgent.initialize();
@@ -106,21 +123,26 @@ async function main() {
     // Add the user's message to chat history
     chatHistory.push({ type: 'human', content: userInput });
 
-    // Process the message using the agent
-    const agentResponse = await llm.processMessage(
+    // Process the message using the NFT agent if it contains NFT-related keywords
+    const isNFTRequest = userInput.toLowerCase().includes('nft') || 
+                        userInput.toLowerCase().includes('mint') ||
+                        userInput.toLowerCase().includes('token');
+    
+    const agentResponse = await (isNFTRequest ? nftAgent : llm).processMessage(
       userInput,
       chatHistory
     );
 
-    // Log only the agent's response output
+    // Log the response
     console.log("\nAI Response:", agentResponse.message || agentResponse.output);
 
     // Add the agent's response to chat history
     chatHistory.push({ type: 'ai', content: agentResponse.output });
   }
 
-  // Call the function with "hello"
-  await handleUserMessage("tells a story about a dragon");
+  // Test NFT functionality with these commands
+  await handleUserMessage("create an NFT collection called DragonNFT with symbol DNFT");
+  await handleUserMessage("mint a new NFT in the collection with some dragon metadata");
 }
 
 main().catch(console.error);
