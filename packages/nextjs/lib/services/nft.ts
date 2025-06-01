@@ -388,7 +388,7 @@ export class NFTService {
     const serial = mintRx.serials[0].toNumber();
 
     // Transfer to recipient
-    await this.transferNFT(tokenId, serial, recipientId);
+    // await this.transferNFT(tokenId, serial, recipientId); // Commented out for demo purposes
 
     return { serial, tokenId };
   }

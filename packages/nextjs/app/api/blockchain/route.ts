@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
     // Get player's Hedera account ID from the database or configuration
     // For now, we'll use a placeholder - you'll need to implement the actual lookup
-    const playerHederaId = process.env.PLAYER_HEDERA_ID || "0.0.6087266"; // Default player account
+    const playerHederaId = process.env.PLAYER_HEDERA_ID || "0.0.9224321"; // Default player account
 
     if (!playerHederaId) {
       return NextResponse.json({
