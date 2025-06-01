@@ -94,9 +94,9 @@ export const Header = () => {
             <span className="text-xs text-[#d4af37]/80">Dungeons & AI</span>
           </div>
         </Link>
-        <ul className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
+        <nav className="hidden lg:flex lg:flex-nowrap menu menu-horizontal px-1 gap-2">
           <HeaderMenuLinks />
-        </ul>
+        </nav>
       </div>
       <div className="navbar-end grow mr-4 flex items-center gap-2">
         <SwitchTheme className="mr-2" />
