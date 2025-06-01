@@ -284,7 +284,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
               }}
             >
               {activity.name}
-              <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-[#2c1810] text-[#d4af37] text-sm rounded-lg border border-[#d4af37]/30 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none max-w-[200px] break-words">
+              <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-[#2c1810] text-[#d4af37] text-sm rounded-lg border border-[#d4af37]/30 opacity-0 pointer-events-none max-w-[200px] break-words hover:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:transition-opacity">
                 <p className="whitespace-normal">{activity.description}</p>
               </div>
             </Button>
