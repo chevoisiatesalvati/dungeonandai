@@ -40,7 +40,7 @@ const ChatWithNoSSR = dynamic(
           playerName={playerName}
           playerId="player123" // TODO: Replace with actual player ID
           serverUrl={serverUrl}
-        />
+        /> 
       );
     };
   }),
