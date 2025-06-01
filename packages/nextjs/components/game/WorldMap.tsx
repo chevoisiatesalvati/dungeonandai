@@ -85,11 +85,11 @@ export const WorldMap: React.FC = () => {
   const getDifficultyColor = (difficulty: Location["difficulty"]) => {
     switch (difficulty) {
       case "safe":
-        return "text-green-500 border-green-500 hover:bg-green-500/10";
+        return "text-green-500 border-green-500 hover:bg-green-500/10 hover:text-green-500";
       case "moderate":
-        return "text-yellow-500 border-yellow-500 hover:bg-yellow-500/10";
+        return "text-yellow-500 border-yellow-500 hover:bg-yellow-500/10 hover:text-yellow-500";
       case "dangerous":
-        return "text-red-500 border-red-500 hover:bg-red-500/10";
+        return "text-red-500 border-red-500 hover:bg-red-500/10 hover:text-red-500";
     }
   };
 
@@ -122,7 +122,7 @@ export const WorldMap: React.FC = () => {
                   location.enabled
                     ? getDifficultyColor(location.difficulty)
                     : "text-gray-500 border-gray-500 cursor-not-allowed"
-                } ${hoveredLocation === location.id ? "scale-110 z-10" : ""}`}
+                } ${hoveredLocation === location.id ? "scale-120 z-10" : ""}`}
                 style={{
                   left: `${location.position.x}%`,
                   top: `${location.position.y}%`,
@@ -135,7 +135,7 @@ export const WorldMap: React.FC = () => {
                 {location.icon}
               </Button>
             </TooltipTrigger>
-            <TooltipContent>
+            <TooltipContent className="bg-black/80 border-[#d4af37]">
               <div className="p-2">
                 <h3 className="font-bold text-sm">{location.name}</h3>
                 <p className="text-xs text-gray-400 mt-1">{location.description}</p>
