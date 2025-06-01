@@ -16,6 +16,7 @@ interface Message {
   timestamp: Date;
   senderName?: string;
   senderId?: string;
+  type: "message" | "action";
 }
 
 interface LocationChatProps {
@@ -39,6 +40,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
+  const [isActionMode, setIsActionMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const formattedLocationName = locationId
@@ -54,6 +56,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
       sender: "npc" as const,
       senderName: npcName,
       timestamp: new Date(),
+      type: "message",
     };
     setMessages([greeting]);
   }, [formattedLocationName, npcName]);
@@ -68,6 +71,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
         senderName: playerName,
         senderId: playerId,
         timestamp: new Date(),
+        type: "action",
       };
       setMessages(prev => [...prev, playerMessage]);
 
@@ -78,6 +82,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
           sender: "npc",
           senderName: npcName,
           timestamp: new Date(),
+          type: "action",
         };
         setMessages(prev => [...prev, npcResponse]);
       }, 1000);
@@ -107,6 +112,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
       senderName: playerName,
       senderId: playerId,
       timestamp: new Date(),
+      type: isActionMode ? "action" : "message",
     };
     setMessages(prev => [...prev, playerMessage]);
     setInputMessage("");
@@ -117,6 +123,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
       sender: "npc",
       senderName: npcName,
       timestamp: new Date(),
+      type: isActionMode ? "action" : "message",
     };
     setMessages(prev => [...prev, npcResponse]);
   };
@@ -220,31 +227,41 @@ export const LocationChat: React.FC<LocationChatProps> = ({
                   key={message.id}
                   className={`flex ${message.sender === "player" ? "justify-end" : "justify-start"}`}
                 >
-                  <div
-                    className={`max-w-[80%] rounded-lg p-4 ${
-                      message.sender === "player"
-                        ? "bg-[#d4af37] text-[#2c1810]"
-                        : "bg-[#1a0f0a] text-[#d4af37] border border-[#d4af37]/30"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      {message.sender === "player" && message.senderId ? (
-                        <Link href={`/profile/${message.senderId}`} className="text-sm font-semibold hover:underline">
-                          {message.senderName}
-                        </Link>
-                      ) : (
-                        <span className="text-sm font-semibold">{message.senderName}</span>
-                      )}
+                  {message.type === "action" ? (
+                    <div className="max-w-[80%]">
+                      <div className="text-[#90EE90]/90 italic text-sm">
+                        {message.sender === "player" ? `${playerName} ` : `${npcName} `}
+                        {message.content}
+                      </div>
+                      <span className="text-xs opacity-50 mt-1 block">{message.timestamp.toLocaleTimeString()}</span>
                     </div>
-                    <div className="prose prose-invert max-w-none">
-                      {message.sender === "npc" ? (
-                        <div className="space-y-2">{formatMessage(message.content)}</div>
-                      ) : (
-                        <p className="text-sm">{message.content}</p>
-                      )}
+                  ) : (
+                    <div
+                      className={`max-w-[80%] rounded-lg p-4 ${
+                        message.sender === "player"
+                          ? "bg-[#d4af37] text-[#2c1810]"
+                          : "bg-[#1a0f0a] text-[#d4af37] border border-[#d4af37]/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 mb-2">
+                        {message.sender === "player" && message.senderId ? (
+                          <Link href={`/profile/${message.senderId}`} className="text-sm font-semibold hover:underline">
+                            {message.senderName}
+                          </Link>
+                        ) : (
+                          <span className="text-sm font-semibold">{message.senderName}</span>
+                        )}
+                      </div>
+                      <div className="prose prose-invert max-w-none">
+                        {message.sender === "npc" ? (
+                          <div className="space-y-2">{formatMessage(message.content)}</div>
+                        ) : (
+                          <p className="text-sm">{message.content}</p>
+                        )}
+                      </div>
+                      <span className="text-xs opacity-50 mt-2 block">{message.timestamp.toLocaleTimeString()}</span>
                     </div>
-                    <span className="text-xs opacity-50 mt-2 block">{message.timestamp.toLocaleTimeString()}</span>
-                  </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -280,9 +297,15 @@ export const LocationChat: React.FC<LocationChatProps> = ({
             value={inputMessage}
             onChange={e => setInputMessage(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="Type your message..."
+            placeholder={isActionMode ? "Describe your action..." : "Type your message..."}
             className="bg-[#1a0f0a] border-[#d4af37]/30 text-[#d4af37] placeholder:text-[#d4af37]/50"
           />
+          <Button
+            onClick={() => setIsActionMode(!isActionMode)}
+            className={`bg-[#1a0f0a] hover:bg-[#322c1b40] hover:text-[#2c1810] border border-[#d4af37]/30 transition-colors`}
+          >
+            {isActionMode ? "💬" : "🎭"}
+          </Button>
           <Button onClick={handleSendMessage} className="bg-[#d4af37] text-[#2c1810] hover:bg-[#d4af37]/90">
             <Send className="h-4 w-4" />
           </Button>

@@ -35,17 +35,17 @@ const locationData: Record<
       {
         name: "Order a Drink",
         description: "Rest and recover while enjoying a refreshing beverage.",
-        action: "I would like to order a drink, good barkeep.",
+        action: "Ordering a drink to the barkeep.",
       },
       {
         name: "Listen to Tales",
         description: "Hear stories from other adventurers and learn about hidden treasures.",
-        action: "I'd like to hear some tales from your patrons.",
+        action: "Starting to listen to the tales of the patrons.",
       },
       {
         name: "Talk to the Barkeep",
         description: "Talk to the barkeep and learn about the tavern.",
-        action: "I'd like to talk to the barkeep.",
+        action: "Talking to the barkeep and asking about the tavern.",
       },
     ],
     npcName: "Tavern Keeper",
@@ -62,17 +62,17 @@ const locationData: Record<
       {
         name: "Explore the Woods",
         description: "Venture into the depths of the forest.",
-        action: "I wish to explore these woods. What should I be wary of?",
+        action: "Adventuring into the forest...",
       },
       {
         name: "Hunt for Treasure",
         description: "Search for hidden treasures and artifacts.",
-        action: "I've heard there are treasures hidden in these woods. Can you tell me more?",
+        action: "Starting to hunt for treasure in the forest...",
       },
       {
         name: "Talk to the Forest Guide",
         description: "Talk to the forest guide and learn about the forest.",
-        action: "I'd like to talk to the forest guide.",
+        action: "Talking to the forest guide and asking about the forest.",
       },
     ],
     npcName: "Forest Guide",
