@@ -121,8 +121,8 @@ export const LocationChat: React.FC<LocationChatProps> = ({
         return;
       }
 
-      // Check if it's a user message that needs GM response
-      if (lastMessage.type === 'message' && lastMessage.sender === 'player') {
+      // Check if it's a user message or action that needs GM response
+      if ((lastMessage.type === 'message' || lastMessage.type === 'action') && lastMessage.sender === 'player') {
         console.log('=== Processing Last User Message ===');
         console.log('Message:', lastMessage);
         
@@ -140,7 +140,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
             senderName: "GM",
             senderId: "gm",
             timestamp: new Date(),
-            type: "message",
+            type: lastMessage.type, // Keep the same type as the user message
             isGMResponse: true,
             locationId: locationId
           };
@@ -180,7 +180,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
   // Listen for action events
   useEffect(() => {
     const handleAction = (event: CustomEvent<{ action: string }>) => {
-      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || isWaitingForGM) return;
 
       const actionMessage: Message = {
         id: Date.now().toString(),
@@ -190,18 +190,19 @@ export const LocationChat: React.FC<LocationChatProps> = ({
         senderId: playerId,
         timestamp: new Date(),
         type: "action",
+        locationId: locationId
       };
 
+      // Add action message to chat immediately
+      setMessages(prev => [...prev, actionMessage]);
+
       // Send action through WebSocket
-      wsRef.current.send(JSON.stringify({
-        ...actionMessage,
-        locationId: locationId
-      }));
+      wsRef.current.send(JSON.stringify(actionMessage));
     };
 
     window.addEventListener("location-action", handleAction as EventListener);
     return () => window.removeEventListener("location-action", handleAction as EventListener);
-  }, [npcName, playerName, playerId, locationId]);
+  }, [npcName, playerName, playerId, locationId, isWaitingForGM]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
