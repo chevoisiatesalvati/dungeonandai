@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/tooltip";
-import { Castle, Home, MapPin, Store, Swords, Trees } from "lucide-react";
+import { Beer, Castle, Home, Store, Swords, Trees } from "lucide-react";
 
 interface Location {
   id: string;
@@ -31,7 +31,7 @@ const locations: Record<string, Location> = {
     id: "mystic-tavern",
     name: "Mystic Tavern",
     description: "A cozy tavern where adventurers share tales and receive quests.",
-    icon: <MapPin className="w-6 h-6" />,
+    icon: <Beer className="w-6 h-6" />,
     position: { x: 30, y: 40 },
     difficulty: "safe",
     enabled: true,
@@ -118,7 +118,7 @@ export const WorldMap: React.FC = () => {
             <TooltipTrigger asChild>
               <Button
                 variant="outline"
-                className={`absolute transform -translate-x-1/2 -translate-y-1/2 p-3 transition-all duration-200 cursor-pointer ${
+                className={`absolute transform -translate-x-1/2 -translate-y-1/2 p-3 transition-all duration-200 cursor-pointer bg-transparent ${
                   location.enabled
                     ? getDifficultyColor(location.difficulty)
                     : "text-gray-500 border-gray-500 cursor-not-allowed"
