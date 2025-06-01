@@ -57,11 +57,20 @@ export async function POST(request: Request) {
 
     // Get player's Hedera account ID from the database or configuration
     // For now, we'll use a placeholder - you'll need to implement the actual lookup
-    const playerHederaId = process.env.PLAYER_HEDERA_ID || "0.0.1234567"; // Replace with actual lookup
+    const playerHederaId = process.env.PLAYER_HEDERA_ID || "0.0.6087266"; // Default player account
 
     if (!playerHederaId) {
       return NextResponse.json({
         content: "Error: Player's Hedera account ID not found. Please set up your account first.",
+        shouldRespond: true,
+        type: "error",
+      });
+    }
+
+    // Check if we're trying to transfer to the same account
+    if (playerHederaId === process.env.ACCOUNT_ID) {
+      return NextResponse.json({
+        content: "Error: Cannot transfer NFT to the same account. Please use a different recipient.",
         shouldRespond: true,
         type: "error",
       });

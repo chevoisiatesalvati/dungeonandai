@@ -1,3 +1,4 @@
+import { IPFSService } from "./ipfs";
 import {
   AccountBalanceQuery,
   Client,
@@ -12,6 +13,8 @@ import {
   TokenType,
   TransferTransaction,
 } from "@hashgraph/sdk";
+import fs from "fs";
+import path from "path";
 
 // Define item types and their metadata
 export interface ItemMetadata {
@@ -222,6 +225,7 @@ export class NFTService {
   private operatorId: string;
   private operatorKey: PrivateKey;
   private collections: Map<string, string> = new Map();
+  private ipfsService: IPFSService;
 
   constructor() {
     if (!process.env.ACCOUNT_ID || !process.env.HEDERA_PRIVATE_KEY) {
@@ -233,6 +237,7 @@ export class NFTService {
 
     this.client = Client.forTestnet();
     this.client.setOperator(this.operatorId, this.operatorKey);
+    this.ipfsService = new IPFSService();
   }
 
   // Initialize collections when the server starts
@@ -289,8 +294,98 @@ export class NFTService {
       this.collections.set(itemType, tokenId);
     }
 
+    let metadataCid: string;
+
+    // Handle beer NFT specifically
+    if (itemType === "TAVERN_BEER") {
+      // Read the beer image from public folder
+      const imagePath = path.join(process.cwd(), "public", "beer.webp");
+      const imageBuffer = await fs.promises.readFile(imagePath);
+      const imageBlob = new Blob([imageBuffer], { type: "image/webp" });
+      const imageFile = new File([imageBlob], "beer.webp", { type: "image/webp" });
+
+      // Upload image first to get the CID
+      const imageCid = await this.ipfsService.uploadImage(imageFile);
+
+      // Upload metadata to IPFS
+      metadataCid = await this.ipfsService.uploadMetadata({
+        name: itemConfig.metadata.n,
+        description: itemConfig.metadata.d,
+        image: imageCid,
+        attributes: {
+          type: itemConfig.metadata.a.t,
+          rarity: itemConfig.metadata.a.r,
+          stats: itemConfig.metadata.a.s,
+          properties: itemConfig.metadata.a.p,
+          effects: (itemConfig.metadata.a as any).e || [],
+        },
+        category: itemConfig.metadata.c,
+        subcategory: itemConfig.metadata.sc,
+        level_requirement: itemConfig.metadata.l,
+        crafting_requirements: {
+          materials: itemConfig.metadata.cr.m.map(m => ({
+            name: m.n,
+            quantity: m.q,
+          })),
+          skill_requirement: itemConfig.metadata.cr.sr
+            ? {
+                name: itemConfig.metadata.cr.sr.n,
+                level: itemConfig.metadata.cr.sr.l,
+              }
+            : undefined,
+        },
+      });
+    } else {
+      // For other items, just use the existing metadata
+      metadataCid = await this.ipfsService.uploadMetadata({
+        name: itemConfig.metadata.n,
+        description: itemConfig.metadata.d,
+        image: itemConfig.metadata.i,
+        attributes: {
+          type: itemConfig.metadata.a.t,
+          rarity: itemConfig.metadata.a.r,
+          stats: itemConfig.metadata.a.s,
+          properties: itemConfig.metadata.a.p,
+          special_abilities: (itemConfig.metadata.a as any).sa || [],
+        },
+        category: itemConfig.metadata.c,
+        subcategory: itemConfig.metadata.sc,
+        level_requirement: itemConfig.metadata.l,
+        crafting_requirements: {
+          materials: itemConfig.metadata.cr.m.map(m => ({
+            name: m.n,
+            quantity: m.q,
+          })),
+          skill_requirement: itemConfig.metadata.cr.sr
+            ? {
+                name: itemConfig.metadata.cr.sr.n,
+                level: itemConfig.metadata.cr.sr.l,
+              }
+            : undefined,
+        },
+      });
+    }
+
+    // Create minimal metadata for minting (only essential fields)
+    const minimalMetadata = {
+      m: metadataCid, // metadata CID only
+    };
+
+    const minimalMetadataStr = JSON.stringify(minimalMetadata);
+
+    // Ensure metadata is within Hedera's limits (100 bytes)
+    if (Buffer.from(minimalMetadataStr).length > 100) {
+      throw new Error("Metadata too long. Must be less than 100 bytes.");
+    }
+
     // Mint the NFT with compressed metadata
-    const serial = await this.mintNFT(tokenId, JSON.stringify(itemConfig.metadata));
+    const mintTx = await new TokenMintTransaction()
+      .setTokenId(tokenId)
+      .setMetadata([Buffer.from(minimalMetadataStr)])
+      .execute(this.client);
+
+    const mintRx = await mintTx.getReceipt(this.client);
+    const serial = mintRx.serials[0].toNumber();
 
     // Transfer to recipient
     await this.transferNFT(tokenId, serial, recipientId);
@@ -301,12 +396,15 @@ export class NFTService {
   async mintNFT(tokenId: string, metadata: string): Promise<number> {
     console.log("Minting NFT to collection:", tokenId);
 
-    // Create minimal metadata for minting (only essential fields)
+    // Parse the full metadata
     const fullMetadata = JSON.parse(metadata);
+
+    // Upload metadata to IPFS
+    const metadataCid = await this.ipfsService.uploadMetadata(fullMetadata);
+
+    // Create minimal metadata for minting (only essential fields)
     const minimalMetadata = {
-      n: fullMetadata.n, // name
-      t: fullMetadata.a.t, // type
-      r: fullMetadata.a.r, // rarity
+      m: metadataCid, // metadata CID only
     };
 
     const minimalMetadataStr = JSON.stringify(minimalMetadata);

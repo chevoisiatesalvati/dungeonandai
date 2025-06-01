@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
-import { ScrollArea } from "../ui/scroll-area";
+import * as ScrollAreaPrimitive from "@radix-ui/react-scroll-area";
 import { Send } from "lucide-react";
 import { AgentContext, BlockchainAgent, LocationGameMaster, NPCAgent } from "~~/lib/agents";
 
@@ -16,7 +16,7 @@ interface Message {
   timestamp: Date;
   senderName?: string;
   senderId?: string;
-  type: "message" | "action";
+  type: "message" | "action" | "blockchain";
 }
 
 interface LocationChatProps {
@@ -134,7 +134,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
           sender: "npc",
           senderName: "Blockchain",
           timestamp: new Date(),
-          type: blockchainResponse.type,
+          type: "blockchain",
         };
         setMessages(prev => [...prev, blockchainMessage]);
       }
@@ -210,7 +210,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
         sender: "npc",
         senderName: "Blockchain",
         timestamp: new Date(),
-        type: blockchainResponse.type,
+        type: "blockchain",
       };
       setMessages(prev => [...prev, blockchainMessage]);
     }
@@ -307,7 +307,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
 
       {/* Messages Area */}
       <div className="flex-1 overflow-hidden">
-        <ScrollArea className="h-full" ref={scrollRef}>
+        <div className="h-full overflow-y-auto" ref={scrollRef}>
           <div className="p-4">
             <div className="space-y-4">
               {messages.map(message => (
@@ -321,6 +321,11 @@ export const LocationChat: React.FC<LocationChatProps> = ({
                         {message.sender === "player" ? `${playerName} ` : `${npcName} `}
                         {message.content}
                       </div>
+                      <span className="text-xs opacity-50 mt-1 block">{message.timestamp.toLocaleTimeString()}</span>
+                    </div>
+                  ) : message.type === "blockchain" ? (
+                    <div className="max-w-[80%]">
+                      <div className="text-[#b19cd9] text-sm">{message.content}</div>
                       <span className="text-xs opacity-50 mt-1 block">{message.timestamp.toLocaleTimeString()}</span>
                     </div>
                   ) : (
@@ -354,7 +359,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
               ))}
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </div>
 
       {/* Actions Bar */}
