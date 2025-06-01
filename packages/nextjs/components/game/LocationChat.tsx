@@ -2,12 +2,12 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { GM_Response } from "../../../../dnagent_gm";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import { Input } from "../ui/input";
 import { ScrollArea } from "../ui/scroll-area";
 import { Send } from "lucide-react";
+import { AgentContext, BlockchainAgent, LocationGameMaster, NPCAgent } from "~~/lib/agents";
 
 interface Message {
   id: string;
@@ -42,11 +42,28 @@ export const LocationChat: React.FC<LocationChatProps> = ({
   const [inputMessage, setInputMessage] = useState("");
   const [isActionMode, setIsActionMode] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const gameMasterRef = useRef<LocationGameMaster | null>(null);
+  const npcAgentRef = useRef<NPCAgent | null>(null);
+  const blockchainAgentRef = useRef<BlockchainAgent | null>(null);
 
   const formattedLocationName = locationId
     .split("-")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+
+  // Initialize agents
+  useEffect(() => {
+    const context: AgentContext = {
+      locationId,
+      npcName,
+      playerName,
+      playerId,
+    };
+
+    gameMasterRef.current = new LocationGameMaster(context);
+    npcAgentRef.current = new NPCAgent(context);
+    blockchainAgentRef.current = new BlockchainAgent(context);
+  }, [locationId, npcName, playerName, playerId]);
 
   // Initial greeting message
   useEffect(() => {
@@ -63,10 +80,11 @@ export const LocationChat: React.FC<LocationChatProps> = ({
 
   // Listen for action events
   useEffect(() => {
-    const handleAction = (event: CustomEvent<{ action: string }>) => {
+    const handleAction = async (event: Event) => {
+      const customEvent = event as CustomEvent<{ action: string }>;
       const playerMessage: Message = {
         id: Date.now().toString(),
-        content: event.detail.action,
+        content: customEvent.detail.action,
         sender: "player",
         senderName: playerName,
         senderId: playerId,
@@ -75,21 +93,55 @@ export const LocationChat: React.FC<LocationChatProps> = ({
       };
       setMessages(prev => [...prev, playerMessage]);
 
-      setTimeout(async () => {
-        const npcResponse: Message = {
+      // Process with all agents
+      const [gmResponse, npcResponse, blockchainResponse] = await Promise.all([
+        gameMasterRef.current?.processMessage(customEvent.detail.action),
+        npcAgentRef.current?.processMessage(customEvent.detail.action),
+        blockchainAgentRef.current?.processMessage(customEvent.detail.action),
+      ]);
+
+      // Add GM response if it should respond
+      if (gmResponse?.shouldRespond) {
+        const gmMessage: Message = {
           id: (Date.now() + 1).toString(),
-          content: await GM_Response(event.detail.action),
+          content: gmResponse.content,
+          sender: "npc",
+          senderName: "Game Master",
+          timestamp: new Date(),
+          type: gmResponse.type,
+        };
+        setMessages(prev => [...prev, gmMessage]);
+      }
+
+      // Add NPC response if it should respond
+      if (npcResponse?.shouldRespond) {
+        const npcMessage: Message = {
+          id: (Date.now() + 2).toString(),
+          content: npcResponse.content,
           sender: "npc",
           senderName: npcName,
           timestamp: new Date(),
-          type: "action",
+          type: npcResponse.type,
         };
-        setMessages(prev => [...prev, npcResponse]);
-      }, 1000);
+        setMessages(prev => [...prev, npcMessage]);
+      }
+
+      // Add blockchain response if it should respond
+      if (blockchainResponse?.shouldRespond) {
+        const blockchainMessage: Message = {
+          id: (Date.now() + 3).toString(),
+          content: blockchainResponse.content,
+          sender: "npc",
+          senderName: "Blockchain",
+          timestamp: new Date(),
+          type: blockchainResponse.type,
+        };
+        setMessages(prev => [...prev, blockchainMessage]);
+      }
     };
 
-    window.addEventListener("location-action", handleAction as EventListener);
-    return () => window.removeEventListener("location-action", handleAction as EventListener);
+    window.addEventListener("location-action", handleAction);
+    return () => window.removeEventListener("location-action", handleAction);
   }, [npcName, playerName, playerId]);
 
   // Auto-scroll to bottom when new messages arrive
@@ -117,15 +169,51 @@ export const LocationChat: React.FC<LocationChatProps> = ({
     setMessages(prev => [...prev, playerMessage]);
     setInputMessage("");
 
-    const npcResponse: Message = {
-      id: (Date.now() + 1).toString(),
-      content: await GM_Response(inputMessage),
-      sender: "npc",
-      senderName: npcName,
-      timestamp: new Date(),
-      type: isActionMode ? "action" : "message",
-    };
-    setMessages(prev => [...prev, npcResponse]);
+    // Process with all agents
+    const [gmResponse, npcResponse, blockchainResponse] = await Promise.all([
+      gameMasterRef.current?.processMessage(inputMessage),
+      npcAgentRef.current?.processMessage(inputMessage),
+      blockchainAgentRef.current?.processMessage(inputMessage),
+    ]);
+
+    // Add GM response if it should respond
+    if (gmResponse?.shouldRespond) {
+      const gmMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        content: gmResponse.content,
+        sender: "npc",
+        senderName: "Game Master",
+        timestamp: new Date(),
+        type: gmResponse.type,
+      };
+      setMessages(prev => [...prev, gmMessage]);
+    }
+
+    // Add NPC response if it should respond
+    if (npcResponse?.shouldRespond) {
+      const npcMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        content: npcResponse.content,
+        sender: "npc",
+        senderName: npcName,
+        timestamp: new Date(),
+        type: npcResponse.type,
+      };
+      setMessages(prev => [...prev, npcMessage]);
+    }
+
+    // Add blockchain response if it should respond
+    if (blockchainResponse?.shouldRespond) {
+      const blockchainMessage: Message = {
+        id: (Date.now() + 3).toString(),
+        content: blockchainResponse.content,
+        sender: "npc",
+        senderName: "Blockchain",
+        timestamp: new Date(),
+        type: blockchainResponse.type,
+      };
+      setMessages(prev => [...prev, blockchainMessage]);
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
