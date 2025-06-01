@@ -21,9 +21,10 @@ interface ChatProps {
   playerName: string;
   playerId?: string;
   serverUrl: string;
+  onUserMessage?: (message: string) => Promise<void>;
 }
 
-export const Chat: React.FC<ChatProps> = ({ playerName, playerId, serverUrl }) => {
+export const Chat: React.FC<ChatProps> = ({ playerName, playerId, serverUrl, onUserMessage }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isConnected, setIsConnected] = useState(false);
@@ -70,13 +71,23 @@ export const Chat: React.FC<ChatProps> = ({ playerName, playerId, serverUrl }) =
     }
   }, [messages]);
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!inputMessage.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
+    // Send the message to the WebSocket server
     wsRef.current.send(JSON.stringify({
       type: 'message',
       content: inputMessage
     }));
+
+    // If we have an onUserMessage handler, call it to trigger GM response
+    if (onUserMessage) {
+      try {
+        await onUserMessage(inputMessage);
+      } catch (error) {
+        console.error('Error handling user message:', error);
+      }
+    }
 
     setInputMessage("");
   };
@@ -114,6 +125,8 @@ export const Chat: React.FC<ChatProps> = ({ playerName, playerId, serverUrl }) =
                     className={`max-w-[80%] rounded-lg p-4 ${
                       message.senderId === playerId
                         ? "bg-[#d4af37] text-[#2c1810]"
+                        : message.sender === "GM"
+                        ? "bg-[#1a0f0a] text-[#d4af37] border-2 border-[#d4af37]"
                         : "bg-[#1a0f0a] text-[#d4af37] border border-[#d4af37]/30"
                     }`}
                   >
