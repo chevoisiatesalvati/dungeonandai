@@ -12,11 +12,13 @@ import { Send } from "lucide-react";
 interface Message {
   id: string;
   content: string;
-  sender: "player" | "npc";
+  sender: "player" | "npc" | "gm";
   timestamp: Date;
   senderName?: string;
   senderId?: string;
-  type: "message" | "action";
+  type: "message" | "action" | "join" | "leave";
+  isGMResponse?: boolean;
+  locationId?: string;
 }
 
 interface LocationChatProps {
@@ -41,19 +43,133 @@ export const LocationChat: React.FC<LocationChatProps> = ({
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputMessage, setInputMessage] = useState("");
   const [isActionMode, setIsActionMode] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isWaitingForGM, setIsWaitingForGM] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
   const formattedLocationName = locationId
     .split("-")
     .map(word => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
+  // WebSocket connection
+  useEffect(() => {
+    const ws = new WebSocket(`ws://${window.location.hostname}:3030`);
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log('Connected to chat server');
+      setIsConnected(true);
+      // Send join message with location ID
+      ws.send(JSON.stringify({
+        type: 'join',
+        name: playerName,
+        locationId: locationId
+      }));
+    };
+
+    ws.onmessage = async (event) => {
+      const message: Message = JSON.parse(event.data);
+      console.log('=== Received WebSocket Message ===');
+      console.log('Full message:', message);
+      
+      // Only process messages for this location
+      if (message.locationId !== locationId) {
+        console.log('Message location mismatch:', message.locationId, '!=', locationId);
+        return;
+      }
+
+      // Handle different message types
+      if (message.type === 'join' || message.type === 'leave') {
+        console.log('Processing join/leave message');
+        setMessages(prev => [...prev, message]);
+        return;
+      }
+
+      // If it's a GM message, just add it to chat and unblock input
+      if (message.isGMResponse || message.sender === "gm") {
+        console.log('Processing GM message');
+        setMessages(prev => [...prev, message]);
+        setIsWaitingForGM(false);
+        return;
+      }
+
+      // Add user message to chat
+      console.log('Adding user message to chat');
+      setMessages(prev => [...prev, message]);
+    };
+
+    ws.onclose = () => {
+      console.log('Disconnected from chat server');
+      setIsConnected(false);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [locationId, playerName, playerId]);
+
+  // Effect to handle GM responses based on chat history
+  useEffect(() => {
+    const processLastUserMessage = async () => {
+      // Get the last message from chat history
+      const lastMessage = messages[messages.length - 1];
+      
+      // Skip if no messages or if last message is from GM
+      if (!lastMessage || lastMessage.sender === "gm" || lastMessage.isGMResponse) {
+        return;
+      }
+
+      // Check if it's a user message or action that needs GM response
+      if ((lastMessage.type === 'message' || lastMessage.type === 'action') && lastMessage.sender === 'player') {
+        console.log('=== Processing Last User Message ===');
+        console.log('Message:', lastMessage);
+        
+        setIsWaitingForGM(true);
+        try {
+          console.log('Calling GM_Response with:', lastMessage.content);
+          const gmResponse = await GM_Response(lastMessage.content);
+          console.log('GM Response received:', gmResponse);
+
+          // Create GM message
+          const gmMessage: Message = {
+            id: Date.now().toString(),
+            content: gmResponse,
+            sender: "gm",
+            senderName: "GM",
+            senderId: "gm",
+            timestamp: new Date(),
+            type: lastMessage.type, // Keep the same type as the user message
+            isGMResponse: true,
+            locationId: locationId
+          };
+
+          // Add GM response to chat
+          setMessages(prev => [...prev, gmMessage]);
+
+          // Send GM response through WebSocket for other users
+          if (wsRef.current?.readyState === WebSocket.OPEN) {
+            wsRef.current.send(JSON.stringify(gmMessage));
+          }
+        } finally {
+          setTimeout(() => {
+            setIsWaitingForGM(false);
+          }, 1000);
+        }
+      }
+    };
+
+    // Process the last message whenever messages change
+    processLastUserMessage();
+  }, [messages, locationId]);
+
   // Initial greeting message
   useEffect(() => {
     const greeting: Message = {
       id: "1",
       content: `Welcome to the ${formattedLocationName}! How may I assist you today?`,
-      sender: "npc" as const,
+      sender: "npc",
       senderName: npcName,
       timestamp: new Date(),
       type: "message",
@@ -64,7 +180,9 @@ export const LocationChat: React.FC<LocationChatProps> = ({
   // Listen for action events
   useEffect(() => {
     const handleAction = (event: CustomEvent<{ action: string }>) => {
-      const playerMessage: Message = {
+      if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || isWaitingForGM) return;
+
+      const actionMessage: Message = {
         id: Date.now().toString(),
         content: event.detail.action,
         sender: "player",
@@ -72,25 +190,19 @@ export const LocationChat: React.FC<LocationChatProps> = ({
         senderId: playerId,
         timestamp: new Date(),
         type: "action",
+        locationId: locationId
       };
-      setMessages(prev => [...prev, playerMessage]);
 
-      setTimeout(async () => {
-        const npcResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          content: await GM_Response(event.detail.action),
-          sender: "npc",
-          senderName: npcName,
-          timestamp: new Date(),
-          type: "action",
-        };
-        setMessages(prev => [...prev, npcResponse]);
-      }, 1000);
+      // Add action message to chat immediately
+      setMessages(prev => [...prev, actionMessage]);
+
+      // Send action through WebSocket
+      wsRef.current.send(JSON.stringify(actionMessage));
     };
 
     window.addEventListener("location-action", handleAction as EventListener);
     return () => window.removeEventListener("location-action", handleAction as EventListener);
-  }, [npcName, playerName, playerId]);
+  }, [npcName, playerName, playerId, locationId, isWaitingForGM]);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -102,10 +214,10 @@ export const LocationChat: React.FC<LocationChatProps> = ({
     }
   }, [messages]);
 
-  const handleSendMessage = async () => {
-    if (!inputMessage.trim()) return;
+  const handleSendMessage = () => {
+    if (!inputMessage.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || isWaitingForGM) return;
 
-    const playerMessage: Message = {
+    const message: Message = {
       id: Date.now().toString(),
       content: inputMessage,
       sender: "player",
@@ -113,19 +225,15 @@ export const LocationChat: React.FC<LocationChatProps> = ({
       senderId: playerId,
       timestamp: new Date(),
       type: isActionMode ? "action" : "message",
+      locationId: locationId
     };
-    setMessages(prev => [...prev, playerMessage]);
-    setInputMessage("");
 
-    const npcResponse: Message = {
-      id: (Date.now() + 1).toString(),
-      content: await GM_Response(inputMessage),
-      sender: "npc",
-      senderName: npcName,
-      timestamp: new Date(),
-      type: isActionMode ? "action" : "message",
-    };
-    setMessages(prev => [...prev, npcResponse]);
+    // Add message to chat immediately
+    setMessages(prev => [...prev, message]);
+
+    // Send message through WebSocket
+    wsRef.current.send(JSON.stringify(message));
+    setInputMessage("");
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -213,8 +321,9 @@ export const LocationChat: React.FC<LocationChatProps> = ({
   return (
     <Card className="w-full h-[calc(100vh-2rem)] bg-[#2c1810] border-[#d4af37] flex flex-col overflow-hidden">
       {/* Chat Header */}
-      <div className="p-4 border-b border-[#d4af37]/30 flex-shrink-0">
+      <div className="p-4 border-b border-[#d4af37]/30 flex-shrink-0 flex justify-between items-center">
         <h2 className="text-[#d4af37] font-bold text-lg">{formattedLocationName}</h2>
+        <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-500' : 'bg-red-500'}`} />
       </div>
 
       {/* Messages Area */}
@@ -225,26 +334,27 @@ export const LocationChat: React.FC<LocationChatProps> = ({
               {messages.map(message => (
                 <div
                   key={message.id}
-                  className={`flex ${message.sender === "player" ? "justify-end" : "justify-start"}`}
+                  className={`flex ${message.senderId === playerId ? "justify-end" : "justify-start"}`}
                 >
                   {message.type === "action" ? (
                     <div className="max-w-[80%]">
                       <div className="text-[#90EE90]/90 italic text-sm">
-                        {message.sender === "player" ? `${playerName} ` : `${npcName} `}
-                        {message.content}
+                        {message.senderName} {message.content}
                       </div>
                       <span className="text-xs opacity-50 mt-1 block">{message.timestamp.toLocaleTimeString()}</span>
                     </div>
                   ) : (
                     <div
                       className={`max-w-[80%] rounded-lg p-4 ${
-                        message.sender === "player"
+                        message.senderId === playerId
                           ? "bg-[#d4af37] text-[#2c1810]"
+                          : message.sender === "gm"
+                          ? "bg-[#1a0f0a] text-[#d4af37] border-2 border-[#d4af37]"
                           : "bg-[#1a0f0a] text-[#d4af37] border border-[#d4af37]/30"
                       }`}
                     >
                       <div className="flex items-center gap-2 mb-2">
-                        {message.sender === "player" && message.senderId ? (
+                        {message.senderId && message.senderId !== playerId ? (
                           <Link href={`/profile/${message.senderId}`} className="text-sm font-semibold hover:underline">
                             {message.senderName}
                           </Link>
@@ -253,7 +363,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
                         )}
                       </div>
                       <div className="prose prose-invert max-w-none">
-                        {message.sender === "npc" ? (
+                        {message.sender === "gm" ? (
                           <div className="space-y-2">{formatMessage(message.content)}</div>
                         ) : (
                           <p className="text-sm">{message.content}</p>
@@ -269,7 +379,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
         </ScrollArea>
       </div>
 
-      {/* Actions Bar */}
+      {/* Input Area */}
       <div className="p-4 border-t border-[#d4af37]/30 flex-shrink-0">
         <div className="flex flex-wrap gap-2 mb-4">
           {activities.map((activity, index) => (
@@ -282,6 +392,7 @@ export const LocationChat: React.FC<LocationChatProps> = ({
                 });
                 window.dispatchEvent(event);
               }}
+              disabled={!isConnected || isWaitingForGM}
             >
               {activity.name}
               <div className="absolute bottom-full left-0 mb-2 px-3 py-2 bg-[#2c1810] text-[#d4af37] text-sm rounded-lg border border-[#d4af37]/30 opacity-0 pointer-events-none max-w-[200px] break-words hover:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 [@media(hover:hover)]:transition-opacity">
@@ -299,14 +410,20 @@ export const LocationChat: React.FC<LocationChatProps> = ({
             onKeyDown={handleKeyPress}
             placeholder={isActionMode ? "Describe your action..." : "Type your message..."}
             className="bg-[#1a0f0a] border-[#d4af37]/30 text-[#d4af37] placeholder:text-[#d4af37]/50"
+            disabled={!isConnected || isWaitingForGM}
           />
           <Button
             onClick={() => setIsActionMode(!isActionMode)}
             className={`bg-[#1a0f0a] hover:bg-[#322c1b40] hover:text-[#2c1810] border border-[#d4af37]/30 transition-colors`}
+            disabled={!isConnected || isWaitingForGM}
           >
             {isActionMode ? "💬" : "🎭"}
           </Button>
-          <Button onClick={handleSendMessage} className="bg-[#d4af37] text-[#2c1810] hover:bg-[#d4af37]/90">
+          <Button 
+            onClick={handleSendMessage} 
+            className="bg-[#d4af37] text-[#2c1810] hover:bg-[#d4af37]/90"
+            disabled={!isConnected || isWaitingForGM}
+          >
             <Send className="h-4 w-4" />
           </Button>
         </div>
