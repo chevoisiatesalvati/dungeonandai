@@ -1,7 +1,4 @@
-import { PrivateKey } from "@hashgraph/sdk";
-import { ServerSigner } from "@hashgraphonline/hedera-agent-kit";
-import { HederaConversationalAgent } from "@hashgraphonline/hedera-agent-kit";
-import { ChatOllama } from "@langchain/ollama";
+import { ChatOpenAI } from "@langchain/openai";
 import * as dotenv from "dotenv";
 
 dotenv.config();
@@ -20,17 +17,20 @@ export interface AgentResponse {
 }
 
 export class LocationGameMaster {
-  private llm: ChatOllama | null = null;
+  private llm: ChatOpenAI | null = null;
 
   constructor(private context: AgentContext) {}
 
   private async initializeLLM() {
     if (this.llm) return this.llm;
 
-    this.llm = new ChatOllama({
-      baseUrl: "http://172.28.9.201:11434",
-      model: "qwen3:0.6b",
-      verbose: false,
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not set in environment variables");
+    }
+
+    this.llm = new ChatOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      modelName: "gpt-4o-mini",
       temperature: 0.5,
       streaming: true,
     });
@@ -98,7 +98,7 @@ export class LocationGameMaster {
 }
 
 export class NPCAgent {
-  private llm: ChatOllama | null = null;
+  private llm: ChatOpenAI | null = null;
   private locationContext: { [key: string]: string[] } = {
     tavern: [
       "beer",
@@ -127,10 +127,13 @@ export class NPCAgent {
   private async initializeLLM() {
     if (this.llm) return this.llm;
 
-    this.llm = new ChatOllama({
-      baseUrl: "http://172.28.9.201:11434",
-      model: "qwen3:0.6b",
-      verbose: false,
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not set in environment variables");
+    }
+
+    this.llm = new ChatOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      modelName: "gpt-4o-mini",
       temperature: 0.5,
       streaming: true,
     });
